@@ -3,83 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ujian Online</title>
+    <title>Portal Ujian</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 </head>
 <body class="bg-gray-100 h-screen w-screen overflow-hidden flex flex-col">
 
-    <!-- Layar Login Awal -->
-    <div id="login-screen" class="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center">
-        <h1 class="text-2xl font-bold mb-4">Persiapan Ujian</h1>
-        <input id="student-name" type="text" placeholder="Masukkan Nama Lengkap" class="border p-2 mb-4 w-64 rounded text-center">
-        <button id="start-btn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Mulai Ujian & Aktifkan Kamera</button>
-        <p id="error-msg" class="text-red-500 mt-2 text-sm hidden">Mohon izinkan akses kamera untuk memulai.</p>
+    <!-- Layar Login Siswa -->
+    <div id="login-screen" class="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-lg shadow-lg border max-w-sm w-full text-center">
+            <h1 class="text-2xl font-bold mb-6 text-blue-600">Portal Ujian</h1>
+            
+            <input id="student-name" type="text" placeholder="Nama Lengkap" class="border p-3 mb-4 w-full rounded focus:ring-2 focus:ring-blue-500 outline-none">
+            <input id="student-token" type="text" placeholder="Token Ujian" class="border p-3 mb-6 w-full rounded uppercase font-bold text-center tracking-widest focus:ring-2 focus:ring-blue-500 outline-none">
+            
+            <button id="start-btn" class="bg-blue-600 w-full text-white font-bold px-6 py-3 rounded hover:bg-blue-700 transition">Masuk Ujian</button>
+            <p id="status-msg" class="text-red-500 mt-4 text-sm font-semibold hidden"></p>
+        </div>
     </div>
 
-    <!-- Kamera Mini (Indikator untuk siswa) -->
-    <div class="absolute top-2 right-2 w-32 bg-black rounded shadow-lg z-40 border-2 border-white">
+    <!-- Kamera Pengawas -->
+    <div class="absolute top-2 right-2 w-24 md:w-32 bg-black rounded shadow-lg z-40 border-2 border-white">
         <video id="webcam" autoplay playsinline muted class="w-full h-auto rounded"></video>
-        <div class="text-xs text-white text-center bg-red-600 font-bold">DIAWASI</div>
+        <div class="text-[10px] md:text-xs text-white text-center bg-red-600 font-bold">DIAWASI</div>
     </div>
     
     <canvas id="canvas" class="hidden"></canvas>
 
     <!-- Tempat Google Form -->
-    <iframe id="exam-frame" class="w-full h-full flex-grow border-none" src=""></iframe>
+    <iframe id="exam-frame" class="w-full h-full flex-grow border-none bg-white" src=""></iframe>
 
     <script>
         // MASUKKAN API KEY ABLY ANDA DI SINI
         const ABLY_API_KEY = 'GANTI_DENGAN_API_KEY_ABLY_ANDA';
-        // MASUKKAN LINK GOOGLE FORM ANDA DI SINI (Pastikan tidak perlu login Google)
-        const GOOGLE_FORM_URL = 'GANTI_DENGAN_LINK_GOOGLE_FORM_ANDA';
-
+        
         const ably = new Ably.Realtime(ABLY_API_KEY);
         const channel = ably.channels.get('exam-room');
+        
+        // Buat ID unik untuk setiap HP siswa agar server admin bisa membalas secara spesifik
+        const clientId = Math.random().toString(36).substring(2, 10);
         
         let studentName = "";
         const video = document.getElementById('webcam');
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext('2d');
+        const statusMsg = document.getElementById('status-msg');
 
-        document.getElementById('start-btn').addEventListener('click', async () => {
-            const nameInput = document.getElementById('student-name').value.trim();
-            if (!nameInput) return alert('Nama harus diisi!');
-
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-                studentName = nameInput;
-                
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('exam-frame').src = GOOGLE_FORM_URL;
-                
-                // Mulai kirim foto setiap 15 detik
-                setInterval(sendSnapshot, 15000);
-                sendSnapshot(); // Kirim langsung saat mulai
-            } catch (err) {
-                document.getElementById('error-msg').classList.remove('hidden');
+        // Mendengarkan jawaban Token dari Admin
+        channel.subscribe(`join-response-${clientId}`, async (msg) => {
+            if (msg.data.status === 'ok') {
+                try {
+                    // Minta izin kamera
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = stream;
+                    
+                    // Sembunyikan login & Tampilkan Soal
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('exam-frame').src = msg.data.url;
+                    
+                    // Mulai pengawasan (kirim foto setiap 15 detik)
+                    setInterval(sendSnapshot, 15000);
+                    setTimeout(sendSnapshot, 2000); // Kirim foto pertama setelah 2 detik
+                } catch (err) {
+                    statusMsg.innerText = "Error: Anda harus MENGIZINKAN akses kamera!";
+                    statusMsg.classList.remove('hidden');
+                }
+            } else {
+                // Token salah atau ditolak
+                document.getElementById('start-btn').innerText = "Masuk Ujian";
+                document.getElementById('start-btn').disabled = false;
+                statusMsg.innerText = msg.data.message || "Token salah!";
+                statusMsg.classList.remove('hidden');
             }
+        });
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            const nameInput = document.getElementById('student-name').value.trim();
+            const tokenInput = document.getElementById('student-token').value.trim().toUpperCase();
+            
+            if (!nameInput || !tokenInput) return alert('Nama dan Token harus diisi!');
+            
+            studentName = nameInput;
+            document.getElementById('start-btn').innerText = "Memeriksa Token...";
+            document.getElementById('start-btn').disabled = true;
+            statusMsg.classList.add('hidden');
+
+            // Kirim token ke Admin untuk dicek
+            channel.publish('join-request', { 
+                name: studentName, 
+                token: tokenInput, 
+                clientId: clientId 
+            });
+            
+            // Timeout jika admin belum membuka dashboard
+            setTimeout(() => {
+                if(document.getElementById('login-screen').classList.contains('hidden') === false) {
+                    document.getElementById('start-btn').innerText = "Masuk Ujian";
+                    document.getElementById('start-btn').disabled = false;
+                    statusMsg.innerText = "Guru belum membuka sesi ujian (Timeout).";
+                    statusMsg.classList.remove('hidden');
+                }
+            }, 8000);
         });
 
         function sendSnapshot() {
             if (!studentName) return;
-            
-            // Kompresi ukuran gambar agar sangat ringan (160x120px, kualitas 0.4)
             canvas.width = 160;
             canvas.height = 120;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             const imageData = canvas.toDataURL('image/jpeg', 0.4);
-
             channel.publish('snapshot', { name: studentName, image: imageData });
         }
 
-        // Deteksi jika siswa beralih tab atau minimize browser
+        // Deteksi pindah tab
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden && studentName) {
-                channel.publish('violation', { name: studentName, type: 'Pindah Tab / Minimize' });
-                // Segera kirim foto bukti saat pelanggaran
-                sendSnapshot();
+            if (document.hidden && studentName && document.getElementById('login-screen').classList.contains('hidden')) {
+                channel.publish('violation', { name: studentName });
+                sendSnapshot(); // Jepret bukti wajah saat keluar tab
             }
         });
     </script>
