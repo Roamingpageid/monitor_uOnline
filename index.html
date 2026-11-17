@@ -37,7 +37,7 @@
         const ABLY_API_KEY = 'pXnEYQ.khrX9Q:CM3bJTJmtmAP84p9pmAuwcyIvTS_iQZJueh9gjav1p4';
         
         const ably = new Ably.Realtime(ABLY_API_KEY);
-        const channel = ably.channels.get('exam-room');
+        const channel = ably.channels.get('Exam-proctoring');
         
         // Buat ID unik untuk setiap HP siswa agar server admin bisa membalas secara spesifik
         const clientId = Math.random().toString(36).substring(2, 10);
