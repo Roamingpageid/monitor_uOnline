@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard Ujian</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script src="[https://cdn.ably.com/lib/ably.min-1.js](https://cdn.ably.com/lib/ably.min-1.js)"></script>
 </head>
 <body class="bg-gray-100 p-6 min-h-screen">
 
@@ -15,7 +15,7 @@
         
         <div class="mb-4">
             <label class="block text-gray-700 text-sm font-bold mb-2">Link Google Form Soal:</label>
-            <input id="setup-url" type="url" placeholder="https://docs.google.com/forms/..." class="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input id="setup-url" type="url" placeholder="[https://docs.google.com/forms/](https://docs.google.com/forms/)..." class="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         
         <div class="mb-6">
@@ -44,7 +44,7 @@
     </div>
 
     <script>
-        // MASUKKAN API KEY ABLY ANDA DI SINI
+        // API KEY ANDA SUDAH DIMASUKKAN DI SINI
         const ABLY_API_KEY = 'pXnEYQ.khrX9Q:CM3bJTJmtmAP84p9pmAuwcyIvTS_iQZJueh9gjav1p4';
         const ably = new Ably.Realtime(ABLY_API_KEY);
         const channel = ably.channels.get('exam-room');
@@ -63,11 +63,13 @@
             document.getElementById('setup-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
             document.getElementById('display-token').innerText = activeToken;
+            console.log("Ruang ujian dibuka dengan Token:", activeToken);
         });
 
         // 2. Menerima Permintaan Token dari Siswa
         channel.subscribe('join-request', (msg) => {
             const data = msg.data;
+            console.log("Permintaan masuk dari:", data.name, "dengan Token:", data.token);
             
             // Jika token benar dan sesi sudah dibuka admin
             if (activeToken && data.token === activeToken) {
@@ -87,7 +89,7 @@
                 card.id = cardId;
                 card.className = "bg-white p-3 rounded shadow flex flex-col items-center transition-all duration-300 border-2 border-transparent";
                 card.innerHTML = `
-                    <img id="img-${cardId}" src="https://via.placeholder.com/160x120?text=Menghubungkan" class="w-full h-auto bg-gray-200 rounded mb-2">
+                    <img id="img-${cardId}" src="[https://via.placeholder.com/160x120?text=Menghubungkan](https://via.placeholder.com/160x120?text=Menghubungkan)" class="w-full h-auto bg-gray-200 rounded mb-2">
                     <h3 class="font-bold text-sm text-center truncate w-full" title="${name}">${name}</h3>
                     <div class="flex justify-between w-full mt-2 text-xs">
                         <span class="text-gray-500">Pindah Tab:</span>
