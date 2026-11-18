@@ -1,43 +1,68 @@
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Ujian</title>
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-    <script src="[https://cdn.ably.com/lib/ably.min-1.js](https://cdn.ably.com/lib/ably.min-1.js)"></script>
+    <!-- Script diperbaiki: Menghapus format kurung siku yang salah -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+    <style>
+        /* Tambahan font sehalus Windows (Segoe UI) */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-100 h-screen w-screen overflow-hidden flex flex-col">
+<!-- Background dengan gradasi halus ala Windows 11 -->
+<body class="bg-gradient-to-br from-blue-50 via-gray-100 to-blue-100 h-screen w-screen overflow-hidden flex flex-col">
 
-    <!-- Layar Login Siswa -->
-    <div id="login-screen" class="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-lg shadow-lg border max-w-sm w-full text-center">
-            <h1 class="text-2xl font-bold mb-6 text-blue-600">Portal Ujian</h1>
+    <!-- Layar Login Siswa (Efek Glassmorphism / Kaca Transparan) -->
+    <div id="login-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center p-4 backdrop-blur-sm bg-black/10 transition-opacity duration-500">
+        
+        <!-- Jendela Login ala Windows 11 -->
+        <div class="bg-white/80 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-white/60 max-w-sm w-full text-center transition-all transform hover:shadow-blue-500/20">
             
-            <input id="student-name" type="text" placeholder="Nama Lengkap" class="border p-3 mb-4 w-full rounded focus:ring-2 focus:ring-blue-500 outline-none">
-            <input id="student-token" type="text" placeholder="Token Ujian" class="border p-3 mb-6 w-full rounded uppercase font-bold text-center tracking-widest focus:ring-2 focus:ring-blue-500 outline-none">
+            <!-- Ikon Windows / Keamanan -->
+            <div class="mx-auto w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-blue-500/30">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+
+            <h1 class="text-2xl font-semibold mb-2 text-gray-800 tracking-tight">Portal Ujian</h1>
+            <p class="text-xs text-gray-500 mb-6">Masukkan data Anda untuk memulai</p>
             
-            <button id="start-btn" class="bg-blue-600 w-full text-white font-bold px-6 py-3 rounded hover:bg-blue-700 transition">Masuk Ujian</button>
-            <p id="status-msg" class="text-red-500 mt-4 text-sm font-semibold hidden"></p>
+            <input id="student-name" type="text" placeholder="Nama Lengkap" 
+                class="w-full px-4 py-3 mb-4 rounded-xl bg-white/60 border border-gray-300 placeholder-gray-500 text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-inner">
+            
+            <input id="student-token" type="text" placeholder="TOKEN UJIAN" 
+                class="w-full px-4 py-3 mb-6 rounded-xl bg-white/60 border border-gray-300 placeholder-gray-500 text-gray-700 font-bold uppercase text-center tracking-widest focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-inner">
+            
+            <button id="start-btn" 
+                class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium px-6 py-3 rounded-xl shadow-md hover:shadow-lg hover:shadow-blue-600/30 transition-all active:scale-[0.98]">
+                Masuk Ujian
+            </button>
+            <p id="status-msg" class="text-red-500 bg-red-50 border border-red-200 mt-4 p-2 rounded-lg text-sm font-semibold hidden"></p>
         </div>
     </div>
 
-    <!-- Kamera Pengawas -->
-    <div class="absolute top-2 right-2 w-24 md:w-32 bg-black rounded shadow-lg z-40 border-2 border-white">
-        <video id="webcam" autoplay playsinline muted class="w-full h-auto rounded"></video>
-        <div class="text-[10px] md:text-xs text-white text-center bg-red-600 font-bold">DIAWASI</div>
+    <!-- Kamera Pengawas (Widget Melayang Modern) -->
+    <div class="absolute top-4 right-4 w-28 md:w-36 bg-black/80 backdrop-blur-md rounded-2xl shadow-xl z-40 border-2 border-white/50 overflow-hidden transition-all hover:scale-105">
+        <video id="webcam" autoplay playsinline muted class="w-full h-auto object-cover"></video>
+        <div class="text-[10px] md:text-xs text-white text-center bg-red-600/90 backdrop-blur-sm font-semibold py-1 tracking-wider uppercase">
+            Memantau
+        </div>
     </div>
     
     <canvas id="canvas" class="hidden"></canvas>
 
     <!-- Tempat Google Form -->
-    <iframe id="exam-frame" class="w-full h-full flex-grow border-none bg-white" src=""></iframe>
+    <iframe id="exam-frame" class="w-full h-full flex-grow border-none bg-white shadow-inner" src=""></iframe>
 
     <script>
         // API KEY ANDA SUDAH DIMASUKKAN DI SINI
         const ABLY_API_KEY = 'pXnEYQ.khrX9Q:CM3bJTJmtmAP84p9pmAuwcyIvTS_iQZJueh9gjav1p4';
         
         const ably = new Ably.Realtime(ABLY_API_KEY);
-        const channel = ably.channels.get('Exam-proctoring');
+        // Memastikan menggunakan nama channel yang sama persis
+        const channel = ably.channels.get('Exam-proctoring'); 
         
         // Buat ID unik untuk setiap HP siswa agar server admin bisa membalas secara spesifik
         const clientId = Math.random().toString(36).substring(2, 10);
@@ -47,6 +72,7 @@
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext('2d');
         const statusMsg = document.getElementById('status-msg');
+        const loginScreen = document.getElementById('login-screen');
 
         // Mendengarkan jawaban Token dari Admin
         channel.subscribe(`join-response-${clientId}`, async (msg) => {
@@ -56,8 +82,12 @@
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                     video.srcObject = stream;
                     
-                    // Sembunyikan login & Tampilkan Soal
-                    document.getElementById('login-screen').classList.add('hidden');
+                    // Efek fade-out saat login berhasil
+                    loginScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loginScreen.classList.add('hidden');
+                    }, 500);
+                    
                     document.getElementById('exam-frame').src = msg.data.url;
                     
                     // Mulai pengawasan (kirim foto setiap 15 detik)
@@ -96,7 +126,7 @@
             
             // Timeout jika admin belum membuka dashboard
             setTimeout(() => {
-                if(document.getElementById('login-screen').classList.contains('hidden') === false) {
+                if(!loginScreen.classList.contains('hidden') && loginScreen.style.opacity !== '0') {
                     document.getElementById('start-btn').innerText = "Masuk Ujian";
                     document.getElementById('start-btn').disabled = false;
                     statusMsg.innerText = "Guru belum membuka sesi ujian (Timeout).";
@@ -116,7 +146,7 @@
 
         // Deteksi pindah tab
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden && studentName && document.getElementById('login-screen').classList.contains('hidden')) {
+            if (document.hidden && studentName && loginScreen.classList.contains('hidden')) {
                 channel.publish('violation', { name: studentName });
                 sendSnapshot(); // Jepret bukti wajah saat keluar tab
             }
